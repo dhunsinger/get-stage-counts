@@ -1,5 +1,5 @@
-This script generates a list of all stages used in pipelines used in jobs on Legacy Control
-Hub (SCH 3.x). Script looks at the last job run for pipeline definitions.
+This script generates a list of all stages included in pipelines used in jobs on Legacy Control
+Hub (SCH 3.x). Script looks only at the last job run for pipeline definitions/stage names.
 
 Prerequisites:
  - Python 3.6+; Python 3.9+ preferred
@@ -14,5 +14,5 @@ Prerequisites:
 
         export USER_ID=<your user id>>
         export PASS=<your password>
- - Optional: Filter jobs based on data collector labels. Uncomment lines 37, 38, 57, comment out
-   line 58.
+
+ - Set DataCollector LABEL to evaluate jobs on matching DataCollector labels.
