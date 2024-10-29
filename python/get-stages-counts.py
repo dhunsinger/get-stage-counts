@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 '''
-This script generates a list of all stages used in pipelines used in jobs on Legacy Control
-Hub (SCH 3.x). Script looks at the last job run for pipeline definitions.
+This script generates a list of all stages included in pipelines used in jobs on Legacy Control
+Hub (SCH 3.x). Script looks only at the last job run for pipeline definitions/stage names.
 
 Prerequisites:
  - Python 3.6+; Python 3.9+ preferred
@@ -17,8 +17,8 @@ Prerequisites:
 
         export USER_ID=<your user id>>
         export PASS=<your password>
- - Optional: Filter jobs based on data collector labels. Uncomment lines 37, 38, 57, comment out
-   line 58.
+
+ - Set DataCollector LABEL to evaluate jobs on matching DataCollector labels.
 
 '''
 
@@ -32,11 +32,10 @@ USER_ID = os.getenv('USER_ID')
 PASS = os.getenv('PASS')
 
 # Control Hub URL, e.g. https://cloud.streamsets.com
-#SCH_URL = 'https://cloud.streamsets.com'
-SCH_URL = 'https://trailer.streamsetscloud.com'
+SCH_URL = 'https://cloud.streamsets.com'
 
 # LABEL for jobs to target
-#LABEL = 'foo'
+LABEL = 'daveh'
 
 #Connect to Control Hub
 sch = ControlHub(
@@ -55,14 +54,15 @@ def print_header(header):
 print_header(f'Rertieving jobs from \"{SCH_URL}\"')
 
 #Get list of jobs with correct label
-# jobs = [job for job in sch.jobs if job.data_collector_labels == LABEL]
+#jobs = [job for job in sch.jobs if job.data_collector_labels == LABEL]
 jobs = [job for job in sch.jobs]
 
 # Get Pipeline IDs for matched jobs
 pipelines = []
 for job in jobs:
-    if LABEL in job.data_collector_labels:
-        pipelines.append(job.pipeline_id)
+   if LABEL in job.data_collector_labels:
+       pipelines.append(job.pipeline_id)
+print(f'Found {len(pipelines)} pipelines with Data Collector labels: {LABEL}')
 
 for i in pipelines:
     j = sch.pipelines.get_all(commit_id=job.commit_id)[0]
