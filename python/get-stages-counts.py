@@ -18,7 +18,7 @@ Prerequisites:
         export USER_ID=<your user id>>
         export PASS=<your password>
 
- - Set DataCollector LABEL to evaluate jobs on matching DataCollector labels.
+ - Set LABEL to evaluate pipelines on matching job labels.
 
 '''
 
@@ -36,14 +36,14 @@ USER_ID = os.getenv('USER_ID')
 PASS = os.getenv('PASS')
 
 # Control Hub URL, e.g. https://cloud.streamsets.com
-#SCH_URL = 'https://cloud.streamsets.com'
 SCH_URL = 'https://cloud.streamsets.com'
 
 # LABEL for jobs to target
-LABEL = 'daveh'
+LABEL = 'all'
 
 # Generate a timestamp for file output tagging
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
 # print header method
 def print_header(header):
     divider = 60 * '-'
@@ -69,15 +69,16 @@ print_header(f'Connected to Control Hub at \"{SCH_URL}\"')
 
 print_header(f'Rertieving jobs...')
 
-#Get list of jobs with correct label
+#Get all jobs
 jobs = [job for job in sch.jobs]
-
+#Get pipeline IDs matching LABEL
 pipelines = []
 for job in jobs:
     if LABEL in job.data_collector_labels:
         pipelines.append(job.pipeline_id)
 print_header(f'Found {len(pipelines)} pipelines with Data Collector labels: {LABEL}')
 
+#Get stages from pipeline definitions
 stages = []
 stage_frequency = Counter()
 for i in pipelines:
