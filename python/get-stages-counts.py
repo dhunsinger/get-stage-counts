@@ -23,7 +23,11 @@ Prerequisites:
 '''
 
 from streamsets.sdk import ControlHub
-import os,json
+import os, json
+from collections import Counter
+import csv
+from datetime import datetime
+import sys
 
 # Get user_id from environment
 USER_ID = os.getenv('USER_ID')
@@ -32,18 +36,14 @@ USER_ID = os.getenv('USER_ID')
 PASS = os.getenv('PASS')
 
 # Control Hub URL, e.g. https://cloud.streamsets.com
-SCH_URL = 'https://cloud.streamsets.com'
+#SCH_URL = 'https://cloud.streamsets.com'
+SCH_URL = 'https://trailer.streamsetscloud.com'
 
 # LABEL for jobs to target
 LABEL = 'daveh'
 
-#Connect to Control Hub
-sch = ControlHub(
-    SCH_URL,
-    username=USER_ID,
-    password=PASS
-    )
-
+# Generate a timestamp for file output tagging
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 # print header method
 def print_header(header):
     divider = 60 * '-'
@@ -51,22 +51,85 @@ def print_header(header):
     print(header)
     print(divider)
 
-print_header(f'Rertieving jobs from \"{SCH_URL}\"')
+print_header('Connecting...')
+#Connect to Control Hub
+sch = None
+try:
+    sch = ControlHub(
+        SCH_URL,
+        username=USER_ID,
+        password=PASS)
+except Exception as e:
+    print('Error connecting to Control Hub')
+    print(str(e))
+    sys.exit(1)
+
+print_header(f'Connected to Control Hub at \"{SCH_URL}\"')
+
+print_header(f'Rertieving jobs...')
 
 #Get list of jobs with correct label
-#jobs = [job for job in sch.jobs if job.data_collector_labels == LABEL]
+# jobs = [job for job in sch.jobs if job.data_collector_labels == LABEL]
 jobs = [job for job in sch.jobs]
 
-# Get Pipeline IDs for matched jobs
 pipelines = []
 for job in jobs:
-   if LABEL in job.data_collector_labels:
-       pipelines.append(job.pipeline_id)
-print(f'Found {len(pipelines)} pipelines with Data Collector labels: {LABEL}')
+    if LABEL in job.data_collector_labels:
+        pipelines.append(job.pipeline_id)
+print_header(f'Found {len(pipelines)} pipelines with Data Collector labels: {LABEL}')
 
+stages = []
+stage_frequency = Counter()
 for i in pipelines:
-    j = sch.pipelines.get_all(commit_id=job.commit_id)[0]
-    pipeline_def = j.pipeline_definition
+    p = sch.pipelines.get(pipeline_id=i)
+    pipeline_def = p.pipeline_definition
     pipeline_definition_json = json.loads(pipeline_def)
+    # print(f'{pipeline_definition_json}')
+
     for stage in pipeline_definition_json['stages']:
-        print(f'{stage["instanceName"]}')
+        # print(f'{stage["instanceName"]}')
+        stages.append(stage["stageName"])
+
+    # Count occurrences of instanceNames
+    stage_frequency.update(([stage for stage in stages]))
+
+# Output the stage frequency as a dictionary
+stage_frequency_dict = dict(stage_frequency)
+
+# Deliver the result
+sorted_stages = sorted(stage_frequency.items(), key=lambda item: item[1], reverse=True)
+
+# Ask user for output choice
+print("Choose an option for the output:")
+print("1. Print to stdout")
+print("2. Save to JSON file")
+print("3. Save to CSV file")
+print("4. Exit")
+choice = input("Enter your choice (1/2/3/4): ").strip()
+
+if choice == "1":
+    # Print sorted stages to stdout
+    print("Sorted Stages:")
+    for stage, count in sorted_stages:
+        print(f"{stage}: {count}")
+
+elif choice == "2":
+    # Save sorted stages to JSON
+    output_file = f"stages_{label}_{timestamp}.json"
+    with open(output_file, "w") as json_file:
+        json.dump(dict(sorted_stages), json_file, indent=4)
+    print(f"Sorted stages saved to {output_file}")
+
+elif choice == "3":
+    # Save sorted stages to CSV
+    output_file = f"stages_{label}_{timestamp}.csv"
+    with open(output_file, "w", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(["Stage", "Count"])  # Write header
+        writer.writerows(sorted_stages)  # Write data
+    print(f"Sorted stages saved to {output_file}")
+elif choice == "4":
+    exit(0)
+
+else:
+    print("Invalid choice. Please choose 1, 2, 3, 4 or ctrl+c to exit.")
