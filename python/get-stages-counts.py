@@ -37,7 +37,7 @@ PASS = os.getenv('PASS')
 
 # Control Hub URL, e.g. https://cloud.streamsets.com
 #SCH_URL = 'https://cloud.streamsets.com'
-SCH_URL = 'https://trailer.streamsetscloud.com'
+SCH_URL = 'https://cloud.streamsets.com'
 
 # LABEL for jobs to target
 LABEL = 'daveh'
