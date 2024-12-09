@@ -52,6 +52,7 @@ def print_header(header):
     print(divider)
 
 print_header('Connecting...')
+
 #Connect to Control Hub
 sch = None
 try:
@@ -69,7 +70,6 @@ print_header(f'Connected to Control Hub at \"{SCH_URL}\"')
 print_header(f'Rertieving jobs...')
 
 #Get list of jobs with correct label
-# jobs = [job for job in sch.jobs if job.data_collector_labels == LABEL]
 jobs = [job for job in sch.jobs]
 
 pipelines = []
@@ -84,11 +84,9 @@ for i in pipelines:
     p = sch.pipelines.get(pipeline_id=i)
     pipeline_def = p.pipeline_definition
     pipeline_definition_json = json.loads(pipeline_def)
-    # print(f'{pipeline_definition_json}')
 
     for stage in pipeline_definition_json['stages']:
-        # print(f'{stage["instanceName"]}')
-        stages.append(stage["stageName"])
+       stages.append(stage["stageName"])
 
     # Count occurrences of instanceNames
     stage_frequency.update(([stage for stage in stages]))
@@ -109,7 +107,7 @@ choice = input("Enter your choice (1/2/3/4): ").strip()
 
 if choice == "1":
     # Print sorted stages to stdout
-    print("Sorted Stages:")
+    print("Stages by Frequency:")
     for stage, count in sorted_stages:
         print(f"{stage}: {count}")
 

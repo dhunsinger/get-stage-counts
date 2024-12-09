@@ -16,3 +16,12 @@ Prerequisites:
         export PASS=<your password>
 
  - Set DataCollector LABEL to evaluate jobs on matching DataCollector labels.
+
+ - The script emits 'stageName' values, but can easily be modified to emit stage
+   library names or the user-defined stage names. To do this, simply change line 89
+   as follows:
+      
+         original: stages.append(stage["stageName"])
+         library name: stages.append(stage["library"])
+         label: stages.append(stage["instanceeName"])
+
